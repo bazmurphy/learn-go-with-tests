@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-// [1]
 // We know we want our Countdown function to write data somewhere
 // and io.Writer is the de-facto way of capturing that as an interface in Go.
 
