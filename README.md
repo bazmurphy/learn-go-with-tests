@@ -9,3 +9,5 @@ https://quii.gitbook.io/learn-go-with-tests/
 `go test -bench=.` - run the benchmarks
 
 `go test -cover` - get test coverage
+
+`go test -race` - race detector
