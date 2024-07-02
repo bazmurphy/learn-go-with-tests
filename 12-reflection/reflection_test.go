@@ -310,6 +310,227 @@ type Profile struct {
 
 // What if the value of the struct passed in is a pointer?
 
+// func TestWalk(t *testing.T) {
+// 	cases := []struct {
+// 		Name          string
+// 		Input         interface{}
+// 		ExpectedCalls []string
+// 	}{
+// 		{
+// 			"struct with one string field",
+// 			struct {
+// 				Name string
+// 			}{"Chris"},
+// 			[]string{"Chris"},
+// 		},
+// 		{
+// 			"struct with two string fields",
+// 			struct {
+// 				Name string
+// 				City string
+// 			}{"Chris", "London"},
+// 			[]string{"Chris", "London"},
+// 		},
+// 		{
+// 			"struct with non string field",
+// 			struct {
+// 				Name string
+// 				Age  int
+// 			}{"Chris", 33},
+// 			[]string{"Chris"},
+// 		},
+// 		{
+// 			"nested fields",
+// 			Person{
+// 				"Chris",
+// 				Profile{
+// 					33, "London",
+// 				},
+// 			},
+// 			[]string{"Chris", "London"},
+// 		},
+// 		{
+// 			"pointers to things",
+// 			&Person{
+// 				"Chris",
+// 				Profile{
+// 					33, "London",
+// 				},
+// 			},
+// 			[]string{"Chris", "London"},
+// 		},
+// 	}
+
+// 	for _, test := range cases {
+// 		t.Run(test.Name, func(t *testing.T) {
+// 			var got []string
+// 			walk(test.Input, func(input string) {
+// 				got = append(got, input)
+// 			})
+
+// 			if !reflect.DeepEqual(got, test.ExpectedCalls) {
+// 				t.Errorf("got %v, want %v", got, test.ExpectedCalls)
+// 			}
+// 		})
+// 	}
+// }
+
+// Next, we need to cover slices.
+
+// func TestWalk(t *testing.T) {
+// 	cases := []struct {
+// 		Name          string
+// 		Input         interface{}
+// 		ExpectedCalls []string
+// 	}{
+// 		{
+// 			"struct with one string field",
+// 			struct {
+// 				Name string
+// 			}{"Chris"},
+// 			[]string{"Chris"},
+// 		},
+// 		{
+// 			"struct with two string fields",
+// 			struct {
+// 				Name string
+// 				City string
+// 			}{"Chris", "London"},
+// 			[]string{"Chris", "London"},
+// 		},
+// 		{
+// 			"struct with non string field",
+// 			struct {
+// 				Name string
+// 				Age  int
+// 			}{"Chris", 33},
+// 			[]string{"Chris"},
+// 		},
+// 		{
+// 			"nested fields",
+// 			Person{
+// 				"Chris",
+// 				Profile{
+// 					33, "London",
+// 				},
+// 			},
+// 			[]string{"Chris", "London"},
+// 		},
+// 		{
+// 			"pointers to things",
+// 			&Person{
+// 				"Chris",
+// 				Profile{
+// 					33, "London",
+// 				},
+// 			},
+// 			[]string{"Chris", "London"},
+// 		},
+// 		{
+// 			"slices",
+// 			[]Profile{
+// 				{33, "London"},
+// 				{34, "Reykjavik"},
+// 			},
+// 			[]string{"London", "Reykjavik"},
+// 		},
+// 	}
+
+// 	for _, test := range cases {
+// 		t.Run(test.Name, func(t *testing.T) {
+// 			var got []string
+// 			walk(test.Input, func(input string) {
+// 				got = append(got, input)
+// 			})
+
+// 			if !reflect.DeepEqual(got, test.ExpectedCalls) {
+// 				t.Errorf("got %v, want %v", got, test.ExpectedCalls)
+// 			}
+// 		})
+// 	}
+// }
+
+// func TestWalk(t *testing.T) {
+// 	cases := []struct {
+// 		Name          string
+// 		Input         interface{}
+// 		ExpectedCalls []string
+// 	}{
+// 		{
+// 			"struct with one string field",
+// 			struct {
+// 				Name string
+// 			}{"Chris"},
+// 			[]string{"Chris"},
+// 		},
+// 		{
+// 			"struct with two string fields",
+// 			struct {
+// 				Name string
+// 				City string
+// 			}{"Chris", "London"},
+// 			[]string{"Chris", "London"},
+// 		},
+// 		{
+// 			"struct with non string field",
+// 			struct {
+// 				Name string
+// 				Age  int
+// 			}{"Chris", 33},
+// 			[]string{"Chris"},
+// 		},
+// 		{
+// 			"nested fields",
+// 			Person{
+// 				"Chris",
+// 				Profile{
+// 					33, "London",
+// 				},
+// 			},
+// 			[]string{"Chris", "London"},
+// 		},
+// 		{
+// 			"pointers to things",
+// 			&Person{
+// 				"Chris",
+// 				Profile{
+// 					33, "London",
+// 				},
+// 			},
+// 			[]string{"Chris", "London"},
+// 		},
+// 		{
+// 			"slices",
+// 			[]Profile{
+// 				{33, "London"},
+// 				{34, "Reykjavik"},
+// 			},
+// 			[]string{"London", "Reykjavik"},
+// 		},
+// 		{
+// 			"arrays",
+// 			[2]Profile{
+// 				{33, "London"},
+// 				{34, "Reykjavík"},
+// 			},
+// 			[]string{"London", "Reykjavík"},
+// 		},
+// 	}
+
+// 	for _, test := range cases {
+// 		t.Run(test.Name, func(t *testing.T) {
+// 			var got []string
+// 			walk(test.Input, func(input string) {
+// 				got = append(got, input)
+// 			})
+
+// 			if !reflect.DeepEqual(got, test.ExpectedCalls) {
+// 				t.Errorf("got %v, want %v", got, test.ExpectedCalls)
+// 			}
+// 		})
+// 	}
+// }
+
 func TestWalk(t *testing.T) {
 	cases := []struct {
 		Name          string
@@ -359,6 +580,30 @@ func TestWalk(t *testing.T) {
 			},
 			[]string{"Chris", "London"},
 		},
+		{
+			"slices",
+			[]Profile{
+				{33, "London"},
+				{34, "Reykjavik"},
+			},
+			[]string{"London", "Reykjavik"},
+		},
+		{
+			"arrays",
+			[2]Profile{
+				{33, "London"},
+				{34, "Reykjavík"},
+			},
+			[]string{"London", "Reykjavík"},
+		},
+		// {
+		// 	"maps",
+		// 	map[string]string{
+		// 		"Cow":   "Moo",
+		// 		"Sheep": "Baa",
+		// 	},
+		// 	[]string{"Moo", "Baa"},
+		// },
 	}
 
 	for _, test := range cases {
@@ -372,5 +617,77 @@ func TestWalk(t *testing.T) {
 				t.Errorf("got %v, want %v", got, test.ExpectedCalls)
 			}
 		})
+	}
+
+	// Remember that maps in Go do not guarantee order. So your tests will sometimes fail because we assert that the calls to fn are done in a particular order.
+	// To fix this, we'll need to move our assertion with the maps to a new test where we do not care about the order.
+
+	t.Run("with maps", func(t *testing.T) {
+		aMap := map[string]string{
+			"Cow":   "Moo",
+			"Sheep": "Baa",
+		}
+
+		var got []string
+		walk(aMap, func(input string) {
+			got = append(got, input)
+		})
+
+		assertContains(t, got, "Moo")
+		assertContains(t, got, "Baa")
+	})
+
+	// The next type we want to handle is chan.
+	t.Run("with channels", func(t *testing.T) {
+		aChannel := make(chan Profile)
+
+		go func() {
+			aChannel <- Profile{33, "Berlin"}
+			aChannel <- Profile{34, "Katowice"}
+			close(aChannel)
+		}()
+
+		var got []string
+		want := []string{"Berlin", "Katowice"}
+
+		walk(aChannel, func(input string) {
+			t.Logf("DEBUG | input: %v\n", input)
+			got = append(got, input)
+		})
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	// The next type we want to handle is func.
+	t.Run("with function", func(t *testing.T) {
+		aFunction := func() (Profile, Profile) {
+			return Profile{33, "Berlin"}, Profile{34, "Katowice"}
+		}
+
+		var got []string
+		want := []string{"Berlin", "Katowice"}
+
+		walk(aFunction, func(input string) {
+			got = append(got, input)
+		})
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+}
+
+func assertContains(t testing.TB, haystack []string, needle string) {
+	t.Helper()
+	contains := false
+	for _, x := range haystack {
+		if x == needle {
+			contains = true
+		}
+	}
+	if !contains {
+		t.Errorf("expected %v to contain %q but it didn't", haystack, needle)
 	}
 }

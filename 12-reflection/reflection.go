@@ -103,25 +103,383 @@ import "reflect"
 
 // You can't use NumField on a pointer Value, we need to extract the underlying value before we can do that by using Elem().
 
+// func walk(x interface{}, fn func(input string)) {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	for i := 0; i < val.NumField(); i++ {
+// 		field := val.Field(i)
+
+// 		switch field.Kind() {
+// 		case reflect.String:
+// 			fn(field.String())
+// 		case reflect.Struct:
+// 			walk(field.Interface(), fn)
+// 		}
+// 	}
+// }
+
+// ----------
+
+// Let's encapsulate the responsibility of extracting the reflect.Value from a given interface{} into a function.
+
+// func walk(x interface{}, fn func(input string)) {
+// 	val := getValue(x)
+
+// 	for i := 0; i < val.NumField(); i++ {
+// 		field := val.Field(i)
+
+// 		switch field.Kind() {
+// 		case reflect.String:
+// 			fn(field.String())
+// 		case reflect.Struct:
+// 			walk(field.Interface(), fn)
+// 		}
+// 	}
+// }
+
+// func getValue(x interface{}) reflect.Value {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	return val
+// }
+
+// This actually adds more code but I feel the abstraction level is right.
+// Get the reflect.Value of x so I can inspect it, I don't care how.
+// Iterate over the fields, doing whatever needs to be done depending on its type.
+
+// ----------
+
+// Next, we need to cover slices.
+
+// func walk(x interface{}, fn func(input string)) {
+// 	val := getValue(x)
+
+// 	if val.Kind() == reflect.Slice {
+// 		for i := 0; i < val.Len(); i++ {
+// 			walk(val.Index(i).Interface(), fn)
+// 		}
+// 		return
+// 	}
+
+// 	for i := 0; i < val.NumField(); i++ {
+// 		field := val.Field(i)
+
+// 		switch field.Kind() {
+// 		case reflect.String:
+// 			fn(field.String())
+// 		case reflect.Struct:
+// 			walk(field.Interface(), fn)
+// 		}
+// 	}
+// }
+
+// func getValue(x interface{}) reflect.Value {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	return val
+// }
+
+// ----------
+
+// If you think a little abstractly, we want to call walk on either
+// - Each field in a struct
+// - Each thing in a slice
+// Our code at the moment does this but doesn't reflect it very well. We just have a check at the start to see if it's a slice (with a return to stop the rest of the code executing) and if it's not we just assume it's a struct.
+// Let's rework the code so instead we check the type first and then do our work.
+
+// func walk(x interface{}, fn func(input string)) {
+// 	val := getValue(x)
+
+// 	switch val.Kind() {
+// 	case reflect.Struct:
+// 		for i := 0; i < val.NumField(); i++ {
+// 			walk(val.Field(i).Interface(), fn)
+// 		}
+// 	case reflect.Slice:
+// 		for i := 0; i < val.Len(); i++ {
+// 			walk(val.Index(i).Interface(), fn)
+// 		}
+// 	case reflect.String:
+// 		fn(val.String())
+// 	}
+// }
+
+// func getValue(x interface{}) reflect.Value {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	return val
+// }
+
+// Looking much better! If it's a struct or a slice we iterate over its values calling walk on each one. Otherwise, if it's a reflect.String we can call fn.
+// Still, to me it feels like it could be better. There's repetition of the operation of iterating over fields/values and then calling walk but conceptually they're the same.
+
+// func walk(x interface{}, fn func(input string)) {
+// 	val := getValue(x)
+
+// 	numberOfValues := 0
+// 	var getField func(int) reflect.Value
+
+// 	switch val.Kind() {
+// 	case reflect.String:
+// 		fn(val.String())
+// 	case reflect.Struct:
+// 		numberOfValues = val.NumField()
+// 		getField = val.Field
+// 	case reflect.Slice:
+// 		numberOfValues = val.Len()
+// 		getField = val.Index
+// 	}
+
+// 	for i := 0; i < numberOfValues; i++ {
+// 		walk(getField(i).Interface(), fn)
+// 	}
+// }
+
+// func getValue(x interface{}) reflect.Value {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	return val
+// }
+
+// If the value is a reflect.String then we just call fn like normal.
+// Otherwise, our switch will extract out two things depending on the type
+// - How many fields there are
+// - How to extract the Value (Field or Index)
+// Once we've determined those things we can iterate through numberOfValues calling walk with the result of the getField function.
+// Now we've done this, handling arrays should be trivial.
+
+// func walk(x interface{}, fn func(input string)) {
+// 	val := getValue(x)
+
+// 	numberOfValues := 0
+// 	var getField func(int) reflect.Value
+
+// 	switch val.Kind() {
+// 	case reflect.String:
+// 		fn(val.String())
+// 	case reflect.Struct:
+// 		numberOfValues = val.NumField()
+// 		getField = val.Field
+// 	case reflect.Slice, reflect.Array:
+// 		numberOfValues = val.Len()
+// 		getField = val.Index
+// 	}
+
+// 	for i := 0; i < numberOfValues; i++ {
+// 		walk(getField(i).Interface(), fn)
+// 	}
+// }
+
+// func getValue(x interface{}) reflect.Value {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	return val
+// }
+
+// Again if you think a little abstractly you can see that map is very similar to struct, it's just the keys are unknown at compile time.
+
+// func walk(x interface{}, fn func(input string)) {
+// 	val := getValue(x)
+
+// 	numberOfValues := 0
+
+// 	var getField func(int) reflect.Value
+
+// 	switch val.Kind() {
+// 	case reflect.String:
+// 		fn(val.String())
+// 	case reflect.Struct:
+// 		numberOfValues = val.NumField()
+// 		getField = val.Field
+// 	case reflect.Slice, reflect.Array:
+// 		numberOfValues = val.Len()
+// 		getField = val.Index
+// 	case reflect.Map:
+// 		for _, key := range val.MapKeys() {
+// 			walk(val.MapIndex(key).Interface(), fn)
+// 		}
+// 	}
+
+// 	for i := 0; i < numberOfValues; i++ {
+// 		walk(getField(i).Interface(), fn)
+// 	}
+// }
+
+// func getValue(x interface{}) reflect.Value {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	return val
+// }
+
+// However, by design you cannot get values out of a map by index. It's only done by key, so that breaks our abstraction, darn.
+// How do you feel right now? It felt like maybe a nice abstraction at the time but now the code feels a little wonky.
+// This is OK! Refactoring is a journey and sometimes we will make mistakes. A major point of TDD is it gives us the freedom to try these things out.
+// By taking small steps backed by tests this is in no way an irreversible situation. Let's just put it back to how it was before the refactor.
+
+// func walk(x interface{}, fn func(input string)) {
+// 	val := getValue(x)
+
+// 	walkValue := func(value reflect.Value) {
+// 		walk(value.Interface(), fn)
+// 	}
+
+// 	switch val.Kind() {
+// 	case reflect.String:
+// 		fn(val.String())
+// 	case reflect.Struct:
+// 		for i := 0; i < val.NumField(); i++ {
+// 			walkValue(val.Field(i))
+// 		}
+// 	case reflect.Slice, reflect.Array:
+// 		for i := 0; i < val.Len(); i++ {
+// 			walkValue(val.Index(i))
+// 		}
+// 	case reflect.Map:
+// 		for _, key := range val.MapKeys() {
+// 			walk(val.MapIndex(key).Interface(), fn)
+// 		}
+// 	}
+// }
+
+// func getValue(x interface{}) reflect.Value {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	return val
+// }
+
+// We've introduced walkValue which DRYs up the calls to walk inside our switch so that they only have to extract out the reflect.Values from val.
+
+// ----------
+
+// Remember that maps in Go do not guarantee order. So your tests will sometimes fail because we assert that the calls to fn are done in a particular order.
+
+// ----------
+
+// We can iterate through all values sent through channel until it was closed with Recv()
+
+// func walk(x interface{}, fn func(input string)) {
+// 	val := getValue(x)
+
+// 	walkValue := func(value reflect.Value) {
+// 		walk(value.Interface(), fn)
+// 	}
+
+// 	switch val.Kind() {
+// 	case reflect.String:
+// 		fn(val.String())
+// 	case reflect.Struct:
+// 		for i := 0; i < val.NumField(); i++ {
+// 			walkValue(val.Field(i))
+// 		}
+// 	case reflect.Slice, reflect.Array:
+// 		for i := 0; i < val.Len(); i++ {
+// 			walkValue(val.Index(i))
+// 		}
+// 	case reflect.Map:
+// 		for _, key := range val.MapKeys() {
+// 			walk(val.MapIndex(key).Interface(), fn)
+// 		}
+// 	case reflect.Chan:
+// 		for {
+// 			if v, ok := val.Recv(); ok {
+// 				walkValue(v)
+// 			} else {
+// 				break
+// 			}
+// 		}
+// 	}
+// }
+
+// func getValue(x interface{}) reflect.Value {
+// 	val := reflect.ValueOf(x)
+
+// 	if val.Kind() == reflect.Pointer {
+// 		val = val.Elem()
+// 	}
+
+// 	return val
+// }
+
+// The next type we want to handle is func.
+
 func walk(x interface{}, fn func(input string)) {
+	val := getValue(x)
+
+	walkValue := func(value reflect.Value) {
+		walk(value.Interface(), fn)
+	}
+
+	switch val.Kind() {
+	case reflect.String:
+		fn(val.String())
+	case reflect.Struct:
+		for i := 0; i < val.NumField(); i++ {
+			walkValue(val.Field(i))
+		}
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < val.Len(); i++ {
+			walkValue(val.Index(i))
+		}
+	case reflect.Map:
+		for _, key := range val.MapKeys() {
+			walk(val.MapIndex(key).Interface(), fn)
+		}
+	case reflect.Chan:
+		for {
+			if v, ok := val.Recv(); ok {
+				walkValue(v)
+			} else {
+				break
+			}
+		}
+	case reflect.Func:
+		valFnResult := val.Call(nil)
+		for _, res := range valFnResult {
+			walkValue(res)
+		}
+	}
+}
+
+func getValue(x interface{}) reflect.Value {
 	val := reflect.ValueOf(x)
 
 	if val.Kind() == reflect.Pointer {
 		val = val.Elem()
 	}
 
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-
-		switch field.Kind() {
-		case reflect.String:
-			fn(field.String())
-		case reflect.Struct:
-			walk(field.Interface(), fn)
-		}
-	}
+	return val
 }
 
-// ----------
-
-// Let's encapsulate the responsibility of extracting the reflect.Value from a given interface{} into a function.
+// Non zero-argument functions do not seem to make a lot of sense in this scenario. But we should allow for arbitrary return values.
