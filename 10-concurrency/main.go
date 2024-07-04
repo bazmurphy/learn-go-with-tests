@@ -1,4 +1,4 @@
-package concurrency
+package main
 
 // [01]
 // a function, CheckWebsites, that checks the status of a list of URLs.

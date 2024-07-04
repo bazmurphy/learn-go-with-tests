@@ -1,4 +1,4 @@
-package sync_chapter
+package main
 
 import "sync"
 

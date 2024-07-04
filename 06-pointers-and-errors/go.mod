@@ -1,3 +1,3 @@
-module pointers_and_errors
+module pointers_and_errors_chapter
 
-go 1.22.1
+go 1.22.5

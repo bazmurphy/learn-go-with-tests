@@ -1,4 +1,4 @@
-package context_chapter
+package main
 
 import (
 	"context"

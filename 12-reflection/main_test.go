@@ -1,4 +1,4 @@
-package reflection_chapter
+package main
 
 import (
 	"reflect"

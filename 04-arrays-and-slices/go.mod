@@ -1,3 +1,3 @@
-module arrays_and_slices
+module arrays_and_slices_chapter
 
-go 1.22.1
+go 1.22.5

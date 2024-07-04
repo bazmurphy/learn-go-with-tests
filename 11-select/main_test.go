@@ -1,4 +1,4 @@
-package select_chapter
+package main
 
 import (
 	"net/http"
