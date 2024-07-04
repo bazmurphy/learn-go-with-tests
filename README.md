@@ -11,3 +11,5 @@ https://quii.gitbook.io/learn-go-with-tests/
 `go test -cover` - get test coverage
 
 `go test -race` - race detector
+
+`go test -v` - verbose
